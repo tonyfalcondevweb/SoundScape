@@ -48,7 +48,7 @@ app.use((err, req, res, next) => {
   res.status(500).send("An error occurred!");
 });
 
-// serveur uniquement si ce n'est pas en mode test
+// serveur test
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

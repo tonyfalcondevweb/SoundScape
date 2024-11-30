@@ -18,7 +18,7 @@ app.use(cookieParser());
 // Si vous souhaitez restreindre l'accès à une origine spécifique (par exemple, localhost:5173), faites comme suit :
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.REDIRECT_FRONT,
     credentials: true,
   })
 );

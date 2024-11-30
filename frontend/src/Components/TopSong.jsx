@@ -93,9 +93,9 @@ const TopSong = ({ topSongs }) => {
                   </td>
                 </tr>
                 {(selectedSongId === song.id || closingSongId === song.id) && song.tasteDiveRecommendation && (
-                  <tr className="bg-slate-700">
+                  <tr className="bg-slate-800">
                     <td colSpan="6" className="overflow-hidden">
-                      <div className={`${closingSongId === song.id ? 'animate-slideUp' : 'animate-slideDown'}`}>
+                      <div className={closingSongId === song.id ? 'animate-slideUp' : 'animate-slideDown'}>
                         <div className="bg-slate-800 rounded-lg p-6 shadow-md flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-gray-200 font-medium">

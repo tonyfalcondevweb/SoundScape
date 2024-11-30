@@ -5,8 +5,22 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        slideUp: 'slideUp 0.5s ease-in-out forwards',
+        slideDown: 'slideDown 0.5s ease-in-out forwards',
+      },
+      keyframes: {
+        slideDown: {
+          '0%': { transform: 'translateY(-100px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },        
+        slideUp: {
+          '0%': { transform: 'translateY(0)', opacity: '1' },
+          '100%': { transform: 'translateY(-100px)', opacity: '0' },
+        },
+      },
+    },
   },
   plugins: [],
 }
-

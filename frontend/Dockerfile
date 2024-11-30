@@ -1,5 +1,5 @@
 # Étape 1 : Utiliser l'image officielle Node.js pour Vite.js
-FROM node:18-alpine
+FROM node:22.11.0
 
 # Étape 2 : Créer un répertoire de travail dans le conteneur
 WORKDIR /app

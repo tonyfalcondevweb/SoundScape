@@ -7,6 +7,10 @@ services:
       - "5000:5000" # Mappe le port 5000 du conteneur au port 5000 de la machine hôte
     env_file:
       - ./backend/.env # Charge les variables d'environnement du fichier .env du backend
+    environment:
+      - REDIRECT_URI=http://51.83.77.128:5000/spotify/callback # Utilisation du nom du service 'backend'
+      - MONGODB_URI=mongodb://mongodb:27017/soundscape # Utilisation du nom du service 'mongodb'
+      - REDIRECT_FRONT=http://51.83.77.128:5173 # Utilisation du nom du service 'frontend'
     depends_on:
       - mongodb # Assure-toi que MongoDB est lancé avant le backend
     networks:
@@ -20,6 +24,8 @@ services:
       - "5173:5173" # Mappe le port 5173 du conteneur au port 5173 de la machine hôte
     env_file:
       - ./frontend/.env # Charge les variables d'environnement du fichier .env du frontend
+    environment:
+      - VITE_API_URL=http://51.83.77.128:5000 # Utilisation du nom du service 'backend'
     depends_on:
       - backend # Assure-toi que le backend est lancé avant le frontend
     networks:

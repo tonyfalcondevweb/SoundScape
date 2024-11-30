@@ -1,0 +1,46 @@
+services:
+  # Service Backend (Express.js)
+  backend:
+    build:
+      context: ./backend # Répertoire backend
+    ports:
+      - "5000:5000" # Mappe le port 5000 du conteneur au port 5000 de la machine hôte
+    env_file:
+      - ./backend/.env # Charge les variables d'environnement du fichier .env du backend
+    depends_on:
+      - mongodb # Assure-toi que MongoDB est lancé avant le backend
+    networks:
+      - app-network
+
+  # Service Frontend (React.js + Vite.js)
+  frontend:
+    build:
+      context: ./frontend # Répertoire frontend
+    ports:
+      - "5173:5173" # Mappe le port 5173 du conteneur au port 5173 de la machine hôte
+    env_file:
+      - ./frontend/.env # Charge les variables d'environnement du fichier .env du frontend
+    depends_on:
+      - backend # Assure-toi que le backend est lancé avant le frontend
+    networks:
+      - app-network
+
+  # Service MongoDB (Base de données)
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongodb_data:/data/db # Persiste les données de MongoDB
+    ports:
+      - "27017:27017" # Mappe le port 27017 du conteneur au port 27017 de la machine hôte
+    networks:
+      - app-network
+
+# Définir un réseau partagé pour la communication entre les services
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes pour persister les données de MongoDB
+volumes:
+  mongodb_data:
+    driver: local

@@ -1,52 +1,132 @@
+---
+
 services:
-  # Service Backend (Express.js)
+
+  # *---------*
+  # | MongoDB |
+  # *---------*
+  mongodb:
+    image: mongo:8
+    volumes:
+      - ./volumes/mongodb:/data/db # Persiste les données de MongoDB
+    ports:
+      - "127.0.0.1:27017:27017" # Mappe le port 27017 du conteneur au port 27017 de la machine hôte
+
+  # *----------------------*
+  # | Backend (Express.js) |
+  # *----------------------*
   backend:
     build:
       context: ./backend # Répertoire backend
     ports:
-      - "5000:5000" # Mappe le port 5000 du conteneur au port 5000 de la machine hôte
+      - "127.0.0.1:5000:5000" # Mappe le port 5000 du conteneur au port 5000 de la machine hôte
     env_file:
       - ./backend/.env # Charge les variables d'environnement du fichier .env du backend
     environment:
-      - REDIRECT_URI=http://51.83.77.128:5000/spotify/callback # Utilisation du nom du service 'backend'
-      - MONGODB_URI=mongodb://mongodb:27017/soundscape # Utilisation du nom du service 'mongodb'
-      - REDIRECT_FRONT=http://51.83.77.128:5173 # Utilisation du nom du service 'frontend'
+      - REDIRECT_URI=https://${API_HOST}/spotify/callback # Utilisation du nom du service 'backend'
+      - MONGODB_URI=mongodb://mongodb/soundscape # Utilisation du nom du service 'mongodb'
+      - REDIRECT_FRONT=https://${FRONT_HOST} # Utilisation du nom du service 'frontend'
     depends_on:
       - mongodb # Assure-toi que MongoDB est lancé avant le backend
-    networks:
-      - app-network
+    labels:
+      # *-----------------------*
+      # | Traefik configuration |
+      # *-----------------------*
+      - "traefik.enable=true"
+      # HTTP router: redirect to HTTPS
+      # - "traefik.http.routers.backend-web.rule=${BACKEND_HOST_RULE}"
+      # - "traefik.http.routers.backend-web.priority=1"
+      # - "traefik.http.routers.backend-web.entrypoints=web"
+      # - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      # - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      # HTTPS router
+      - "traefik.http.routers.backend-websecure.rule=${BACKEND_HOST_RULE}"
+      - "traefik.http.routers.backend-websecure.priority=1"
+      - "traefik.http.services.backend.loadbalancer.server.port=5000"
+      - "traefik.http.routers.backend-websecure.entrypoints=websecure"
+      - "traefik.http.routers.backend-websecure.tls.certresolver=letsencrypt-1"
+      # Enable "middlewares"
+      # - "traefik.http.routers.backend-web.middlewares=redirect-to-https"
 
-  # Service Frontend (React.js + Vite.js)
+  # *-------------------------------*
+  # | Frontend (React.js + Vite.js) |
+  # *-------------------------------*
   frontend:
     build:
       context: ./frontend # Répertoire frontend
     ports:
-      - "5173:5173" # Mappe le port 5173 du conteneur au port 5173 de la machine hôte
+      - "127.0.0.1:5173:5173" # Mappe le port 5173 du conteneur au port 5173 de la machine hôte
     env_file:
       - ./frontend/.env # Charge les variables d'environnement du fichier .env du frontend
     environment:
-      - VITE_API_URL=http://51.83.77.128:5000 # Utilisation du nom du service 'backend'
+      - VITE_API_URL=https://${API_HOST} # Utilisation du nom du service 'backend' (via Traefik)
     depends_on:
       - backend # Assure-toi que le backend est lancé avant le frontend
-    networks:
-      - app-network
+    labels:
+      # *-----------------------*
+      # | Traefik configuration |
+      # *-----------------------*
+      - "traefik.enable=true"
+      # HTTP router: redirect to HTTPS
+      - "traefik.http.routers.frontend-web.rule=${FRONTEND_HOST_RULE}"
+      - "traefik.http.routers.frontend-web.priority=1"
+      - "traefik.http.routers.frontend-web.entrypoints=web"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      # HTTPS router
+      - "traefik.http.routers.frontend-websecure.rule=${FRONTEND_HOST_RULE}"
+      - "traefik.http.routers.frontend-websecure.priority=1"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+      - "traefik.http.routers.frontend-websecure.entrypoints=websecure"
+      - "traefik.http.routers.frontend-websecure.tls.certresolver=letsencrypt-1"
+      # Enable "middlewares"
+      - "traefik.http.routers.frontend-web.middlewares=redirect-to-https"
 
-  # Service MongoDB (Base de données)
-  mongodb:
-    image: mongo:latest
-    volumes:
-      - mongodb_data:/data/db # Persiste les données de MongoDB
-    ports:
-      - "27017:27017" # Mappe le port 27017 du conteneur au port 27017 de la machine hôte
-    networks:
-      - app-network
-
-# Définir un réseau partagé pour la communication entre les services
-networks:
-  app-network:
-    driver: bridge
-
-# Volumes pour persister les données de MongoDB
-volumes:
-  mongodb_data:
-    driver: local
+  # *---------*
+  # | Traefik |
+  # *---------*
+  traefik:
+      image: traefik:3
+      command:
+        - "--api=true"
+        - "--api.dashboard=true"
+        - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+        - "--providers.docker.exposedbydefault=false"
+        # Entry points
+        - "--entrypoints.web.address=:80"
+        - "--entrypoints.websecure.address=:443"
+        - "--entrypoints.traefik-web.address=:8080"
+        # Access logs
+        - "--accesslog=true"
+        - "--accesslog.filepath=/var/log/traefik/access.log"
+        - "--accesslog.bufferingsize=200"
+        # Traefik logs
+        - "--log.filepath=/var/log/traefik/traefik.log"
+        - "--log.level=DEBUG"
+        # ACME (Let's Encrypt)
+        - "--certificatesresolvers.letsencrypt-1.acme.httpchallenge=true"
+        - "--certificatesresolvers.letsencrypt-1.acme.httpchallenge.entrypoint=web"
+        - "--certificatesresolvers.letsencrypt-1.acme.email=${ACME_EMAIL}"
+        - "--certificatesresolvers.letsencrypt-1.acme.storage=/letsencrypt/acme.json"
+        - "--certificatesresolvers.letsencrypt-1.acme.caServer=https://acme-v02.api.letsencrypt.org/directory" # Note that Let's Encrypt API has rate limiting.
+        # - "--certificatesresolvers.letsencrypt-1.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory" # For DEV purpose
+      ports:
+        - '80:80'
+        - '127.0.0.1:8080:8080'
+        - '443:443'
+      labels:
+        # *-----------------------*
+        # | Traefik configuration |
+        # *-----------------------*
+        - "traefik.enable=true"
+        - "traefik.http.middlewares.traefik-auth.basicAuth.users=${TRAEFIK_DASHBOARD_AUTH}"
+        - "traefik.http.routers.traefik-web.rule=PathPrefix(`/api`, `/dashboard`)"
+        - "traefik.http.routers.traefik-web.entrypoints=traefik-web"
+        - "traefik.http.routers.traefik-web.middlewares=traefik-auth"
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - ./volumes/traefik/letsencrypt:/letsencrypt
+        - ./volumes/traefik/logs:/var/log/traefik
+      restart: always
+      cpus: '0.15'
+      mem_limit: 64M

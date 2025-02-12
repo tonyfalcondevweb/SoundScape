@@ -10,7 +10,7 @@ const PublicRoutes = () => {
         return <Loading />;
     }
     
-    return isAuthenticated ? <Navigate to="/spotifyAuth" /> : <Outlet />;
+    return isAuthenticated ? <Navigate to="/Authspotify" /> : <Outlet />;
 }
 
 export default PublicRoutes

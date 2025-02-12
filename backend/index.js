@@ -26,7 +26,7 @@ app.use(
 // Fonction de connexion à MongoDB
 const connectDB = async () => {
   try {
-    await connect(process.env.MONGODB_URI);
+    await connect(process.env.MONGO_URI);
     console.log("MongoDB connected successfully!");
   } catch (err) {
     console.error("MongoDB connection error:", err);
@@ -49,7 +49,7 @@ app.use((err, req, res, next) => {
 });
 
 // serveur test
-if (process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV == "test") {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

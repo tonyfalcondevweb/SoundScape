@@ -2,8 +2,7 @@ import axios from 'axios';
 
 // Définir une instance Axios configurée avec les options de base
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,  // Base URL commune pour toutes les requêtes
-  withCredentials: true,  // Assurez-vous d'inclure les informations d'identification (cookies, tokens)
+  withCredentials: true,
 });
 
 // Endpoints

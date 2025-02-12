@@ -10,6 +10,7 @@ const redirectUri = process.env.REDIRECT_URI;
 export const callback = async (req, res, next) => {
   try {
     const { code } = req.query;
+    console.log("Authorization code:", code);
 
     if (!code) {
       throw new Error("Missing authorization code");
@@ -29,10 +30,11 @@ export const callback = async (req, res, next) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
-
+    console.log("Access token received:", response.data.access_token);
     req.accessToken = response.data.access_token;
     next();
   } catch (error) {
-    next(error);
+    console.error("Error during Spotify callback:", error);
+    res.status(500).send("Error processing Spotify callback");
   }
 };

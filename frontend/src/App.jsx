@@ -31,7 +31,7 @@ function App() {
 
             {/* Routes privées */}
             <Route element={<ProtectedRoutes />}>
-              <Route path="/spotifyAuth" element={<LoginSpotify />} />
+              <Route path="/Authspotify" element={<LoginSpotify />} />
             </Route>
 
             {/* Routes Spotify */}

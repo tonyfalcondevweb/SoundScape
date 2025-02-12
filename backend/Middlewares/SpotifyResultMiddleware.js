@@ -53,7 +53,7 @@ export const getTopTracks = async (req, res, next) => {
           track.tasteDiveRecommendation = recommendation;
           return track;
         } catch (error) {
-          console.error(`Erreur pour l'artiste ${track.artists[0].name}:`, error);
+          // console.error(`Erreur pour l'artiste ${track.artists[0].name}:`, error);
           track.tasteDiveRecommendation = {
             name: `Aucun film trouvé en lien avec ${track.artists[0].name}`,
             yUrl: null

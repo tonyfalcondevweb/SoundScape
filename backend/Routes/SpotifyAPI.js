@@ -13,7 +13,7 @@ router.get("/login", login, (req, res) => {
 router.post("/logout", (req, res) => {
   res.clearCookie("spotifyAccessToken", {
     httpOnly: true,
-    secure: true,
+    secure: false, // true en production
     path: "/",
   });
   res.send("Cookie deleted");
@@ -22,7 +22,7 @@ router.post("/logout", (req, res) => {
 router.get("/callback", callback, (req, res) => {
   res.cookie("spotifyAccessToken", req.accessToken, {
     httpOnly: true,
-    secure: true,
+    secure: false, // true en production
     maxAge: 3600 * 1000,
   });
 
